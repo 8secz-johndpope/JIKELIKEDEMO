@@ -2,9 +2,12 @@ package com.example.airy.jikelikedemo
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.*
+import android.support.annotation.Nullable
+import android.support.annotation.StyleRes
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -16,7 +19,7 @@ import android.view.View
  * Github: AiryMiku
  */
 
-open class JiKeLikeView : View{
+open class JiKeLikeView : View {
 
     // Text
     private lateinit var textRounds: Rect  // Text display area
@@ -46,26 +49,31 @@ open class JiKeLikeView : View{
     private var shiningAlpha = 1f
     private var shiningScale = 1f
 
-
     // Animator
     private val duration = 250L
 
-
-    constructor(context: Context, attrs: AttributeSet?)
-            : this(context, attrs, 0)
-
-    constructor(context: Context) : this(context, null)
-
-
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs) {
-        val typedArray : TypedArray = context.obtainStyledAttributes(attrs, R.styleable.JiKeLikeView)
-
-        likeNumber = typedArray.getInt(R.styleable.JiKeLikeView_like_num, 9999)
-        typedArray.recycle() // do recycle work
-        init()
+    constructor(context: Context) : super(context) {
+        init(context, null)
     }
 
-    private fun init() {
+    constructor(context: Context, attrs: AttributeSet?)
+            : super(context, attrs) {
+        init(context, attrs)
+    }
+
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
+        init(context, attrs)
+    }
+
+    constructor(context: Context,attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes) {
+        init(context, attrs)
+    }
+
+    private fun init(context: Context,@Nullable attrs: AttributeSet?) {
+        val typedArray : TypedArray = context.obtainStyledAttributes(attrs, R.styleable.JiKeLikeView)
+        likeNumber = typedArray.getInt(R.styleable.JiKeLikeView_like_num, 9999)
+        typedArray.recycle() // do recycle work
+
         textRounds = Rect() // text display area
         widths = FloatArray(8)
         // draw the thumb
@@ -126,15 +134,13 @@ open class JiKeLikeView : View{
         val handBitmap = if (isLike) { likeBitmap } else { unLikeBitmap }
         val handBitmapHeight = handBitmap.height
         val handBitmapWidth = handBitmap.width
-
         val handTop = (viewHeight - handBitmapHeight) / 2
-        canvas!!.save()
-
+        if (canvas == null) return
+        canvas.save()
         canvas.scale(handScale, handScale, (handBitmapWidth / 2).toFloat(), centerY.toFloat())
         canvas.drawBitmap(handBitmap, DensityUtil.dp2px(context, 10f).toFloat(), handTop.toFloat(), bitmapPaint)
         // save the canvas status before scale
         canvas.restore()
-
 
         // draw the shining
         val shiningTop = handTop - shiningBitmap.height + DensityUtil.dp2px(context, 17f)
@@ -230,6 +236,7 @@ open class JiKeLikeView : View{
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -299,10 +306,8 @@ open class JiKeLikeView : View{
      *  num animation effect
      */
     private fun setLikeNumAnimation() {
-
         textMaxMove = DensityUtil.dp2px(context, 20f).toFloat()
-        
-        var startY: Float = if (isLike) {   // decide where the num move
+        val startY: Float = if (isLike) {   // decide where the num move
             textMaxMove
         } else {
             -textMaxMove
@@ -350,6 +355,21 @@ open class JiKeLikeView : View{
     fun setShingCircleAlpha(shingCircleAlpha: Float) {
         this.shingCircleAlpha = shingCircleAlpha
         invalidate()
+    }
 
+    /**
+     * change like state
+     */
+    fun setLikeState(like: Boolean) {
+        isLike = like
+        invalidate()
+    }
+
+    /**
+     * change like number
+     */
+    fun setLikeNumber(number: Int) {
+        likeNumber = number
+        invalidate()
     }
 }
